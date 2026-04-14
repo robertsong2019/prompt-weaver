@@ -1,0 +1,38 @@
+# 智能评分器
+# 根据分数给出不同的评价
+
+- id: input
+  type: prompt
+  template: "学生 {{student}} 的成绩是 {{score}} 分"
+  next: check_score
+
+- id: check_score
+  type: condition
+  condition: "{{score}} >= 90"
+  true: excellent
+  false: check_good
+
+- id: check_good
+  type: condition
+  condition: "{{score}} >= 60"
+  true: good
+  false: need_improvement
+
+- id: excellent
+  type: prompt
+  template: "🏆 优秀！{{student}} 同学表现卓越！"
+  next: output
+
+- id: good
+  type: prompt
+  template: "👍 不错！{{student}} 同学通过了测试。"
+  next: output
+
+- id: need_improvement
+  type: prompt
+  template: "📚 继续努力！{{student}} 同学需要加油。"
+  next: output
+
+- id: output
+  type: output
+  key: evaluation

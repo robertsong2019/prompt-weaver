@@ -1,0 +1,18 @@
+# 示例工作流
+
+## 1. 问候生成器
+# 简单的链式 prompt
+
+- id: greet
+  type: prompt
+  template: "你好，{{name}}！欢迎来到 {{place}}。"
+  next: transform
+
+- id: transform
+  type: transform
+  transforms: ["upper"]
+  next: output
+
+- id: output
+  type: output
+  key: greeting

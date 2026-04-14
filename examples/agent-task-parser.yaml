@@ -1,0 +1,43 @@
+# AI Agent 任务解析器
+# 解析用户输入并生成任务描述
+
+- id: parse_input
+  type: prompt
+  template: "用户输入: {{user_input}}"
+  next: check_type
+
+- id: check_type
+  type: condition
+  condition: "{{user_input | lower}} contains '创建'"
+  true: create_task
+  false: check_query
+
+- id: check_query
+  type: condition
+  condition: "{{user_input | lower}} contains '查询'"
+  true: query_task
+  false: unknown_task
+
+- id: create_task
+  type: prompt
+  template: "📝 创建任务: 从用户输入中提取创建指令"
+  next: extract_params
+
+- id: query_task
+  type: prompt
+  template: "🔍 查询任务: 处理用户查询请求"
+  next: output
+
+- id: unknown_task
+  type: prompt
+  template: "❓ 未知任务类型，需要进一步澄清"
+  next: output
+
+- id: extract_params
+  type: prompt
+  template: "参数提取完成，准备执行创建操作"
+  next: output
+
+- id: output
+  type: output
+  key: task_result
