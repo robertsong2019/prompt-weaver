@@ -2,3 +2,6 @@ timestamp	commit	metric	value	status	description
 2026-04-14T19:00	baseline	engine_coverage	86%	baseline	60 tests, 95 lines uncovered in engine.py
 2026-04-14T19:10	90819e0	engine_coverage	92%	keep	+13 tests covering conditions/try-catch/map-reduce/mermaid/safe_run/weave/refine
 2026-04-14T19:20	15acf82	engine_coverage	93%	keep	+6 tests: loop counter/for-loop/retry/subworkflow-mapping
+2026-04-14T21:00	67683a3	test_count	88/88	keep	+9 transformers (reverse/sort/head/tail/splitlines/unique/count/default) + 10 tests
+2026-04-14T21:05	08a626a	test_count	92/92	keep	Context.snapshot()/restore() checkpoint-rollback + 4 tests
+2026-04-14T21:10	1848acd	test_count	96/96	keep	weave_file() load-from-file + 4 tests, 2967→3194 lines
