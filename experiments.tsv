@@ -1,0 +1,2 @@
+timestamp	commit	metric	value	status	description
+2026-04-14T19:00	baseline	engine_coverage	86%	baseline	60 tests, 95 lines uncovered in engine.py
