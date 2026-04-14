@@ -1655,3 +1655,53 @@ def test_context_snapshot_restore_in_workflow():
     w.add_output("o", "result")
     ctx = w.run({"val": "hello"})
     assert ctx.get("result") == "HELLO"
+
+
+# --- weave_file tests ---
+
+import tempfile
+import os
+
+def test_weave_file_basic():
+    from weaver.engine import weave_file
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+        f.write("Hello {{name}}, welcome to {{place}}!")
+        f.flush()
+        result = weave_file(f.name, {"name": "Alice", "place": "Wonderland"})
+    os.unlink(f.name)
+    assert result == "Hello Alice, welcome to Wonderland!"
+
+def test_weave_file_missing_raises():
+    from weaver.engine import weave_file
+    try:
+        weave_file("/nonexistent/path/template.txt")
+        assert False, "Should have raised"
+    except FileNotFoundError:
+        pass
+
+def test_weave_file_no_variables():
+    from weaver.engine import weave_file
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+        f.write("Static content here")
+        f.flush()
+        result = weave_file(f.name)
+    os.unlink(f.name)
+    assert result == "Static content here"
+
+def test_weave_file_with_transforms():
+    """Chain weave_file output through transforms."""
+    from weaver.engine import weave_file, PromptWeaver
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+        f.write("{{items}}")
+        f.flush()
+        raw = weave_file(f.name, {"items": "apple banana cherry"})
+    os.unlink(f.name)
+    # Now use raw in a full pipeline
+    w = PromptWeaver()
+    w.add_prompt("start", raw, "t")
+    w.add_transform("t", ["split"], "t2")
+    w.add_transform("t2", ["sort"], "t3")
+    w.add_transform("t3", ["join"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == "apple banana cherry"

@@ -1066,3 +1066,10 @@ def weave(template: str, variables: Optional[Dict[str, Any]] = None) -> str:
     weaver.nodes["start"].next = "end"
     ctx = weaver.run(variables)
     return ctx.current_output
+
+
+def weave_file(path: str, variables: Optional[Dict[str, Any]] = None) -> str:
+    """Load template from file and render with variables."""
+    with open(path, "r", encoding="utf-8") as f:
+        template = f.read()
+    return weave(template, variables)
