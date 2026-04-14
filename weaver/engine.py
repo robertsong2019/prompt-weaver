@@ -141,6 +141,14 @@ class PromptWeaver:
         self.transformers["join"] = lambda x: " ".join(x) if isinstance(x, list) else str(x)
         self.transformers["first"] = lambda x: x[0] if x else None
         self.transformers["last"] = lambda x: x[-1] if x else None
+        self.transformers["reverse"] = lambda x: x[::-1] if isinstance(x, (str, list)) else x
+        self.transformers["sort"] = lambda x: sorted(x) if isinstance(x, list) else x
+        self.transformers["head"] = lambda x: x[:5] if isinstance(x, (str, list)) else x
+        self.transformers["tail"] = lambda x: x[-5:] if isinstance(x, (str, list)) else x
+        self.transformers["splitlines"] = lambda x: x.splitlines() if isinstance(x, str) else x
+        self.transformers["unique"] = lambda x: list(dict.fromkeys(x)) if isinstance(x, list) else x
+        self.transformers["count"] = lambda x: len(x)
+        self.transformers["default"] = lambda x: x if x else ""
 
     def register_transformer(self, name: str, func: Callable):
         """注册自定义转换器"""

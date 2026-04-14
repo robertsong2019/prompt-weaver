@@ -1513,3 +1513,89 @@ def test_subworkflow_variable_mapping():
     w.add_output("out", "result")
     ctx = w.run({"user_name": "Alice", "age": "30"})
     assert "Alice" in str(ctx.get("result"))
+
+
+# --- New transformer tests ---
+
+def test_transform_reverse():
+    w = PromptWeaver()
+    w.add_prompt("p", "hello", "t")
+    w.add_transform("t", ["reverse"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == "olleh"
+
+def test_transform_reverse_list():
+    w = PromptWeaver()
+    w.add_prompt("p", "a b c", "t1")
+    w.add_transform("t1", ["split"], "t2")
+    w.add_transform("t2", ["reverse"], "t3")
+    w.add_transform("t3", ["join"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == "c b a"
+
+def test_transform_sort():
+    w = PromptWeaver()
+    w.add_prompt("p", "cherry apple banana", "t1")
+    w.add_transform("t1", ["split"], "t2")
+    w.add_transform("t2", ["sort"], "t3")
+    w.add_transform("t3", ["join"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == "apple banana cherry"
+
+def test_transform_head_tail():
+    w = PromptWeaver()
+    w.add_prompt("p", "abcdefghij", "t1")
+    w.add_transform("t1", ["head"], "t2")
+    w.add_transform("t2", "join", "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == "abcde"
+
+def test_transform_splitlines():
+    w = PromptWeaver()
+    w.add_prompt("p", "line1\nline2\nline3", "t")
+    w.add_transform("t", ["splitlines"], "t2")
+    w.add_transform("t2", ["length"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == 3
+
+def test_transform_unique():
+    w = PromptWeaver()
+    w.add_prompt("p", "a b a c b", "t1")
+    w.add_transform("t1", ["split"], "t2")
+    w.add_transform("t2", ["unique"], "t3")
+    w.add_transform("t3", ["join"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == "a b c"
+
+def test_transform_default():
+    w = PromptWeaver()
+    w.add_prompt("p", "", "t")
+    w.add_transform("t", ["default"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == ""
+
+def test_transform_count():
+    w = PromptWeaver()
+    w.add_prompt("p", "hello world", "t")
+    w.add_transform("t", ["split"], "t2")
+    w.add_transform("t2", ["count"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == 2
+
+def test_custom_transformer_with_context():
+    """Custom transformer using register_transformer"""
+    w = PromptWeaver()
+    w.register_transformer("double", lambda x: x + x if isinstance(x, str) else x)
+    w.add_prompt("p", "ha", "t")
+    w.add_transform("t", ["double"], "o")
+    w.add_output("o", "result")
+    ctx = w.run()
+    assert ctx.get("result") == "haha"
