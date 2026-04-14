@@ -66,6 +66,26 @@ class Context:
         })
         self.current_output = output
 
+    def snapshot(self) -> Dict[str, Any]:
+        """Capture current state for later restore."""
+        import copy
+        return {
+            "variables": copy.deepcopy(self.variables),
+            "history": copy.deepcopy(self.history),
+            "current_output": copy.deepcopy(self.current_output) if isinstance(self.current_output, (list, dict)) else self.current_output,
+            "errors": {k: str(v) for k, v in self.errors.items()},
+            "parallel_results": copy.deepcopy(self.parallel_results),
+        }
+
+    def restore(self, snap: Dict[str, Any]):
+        """Restore state from a previous snapshot."""
+        import copy
+        self.variables = copy.deepcopy(snap.get("variables", {}))
+        self.history = copy.deepcopy(snap.get("history", []))
+        self.current_output = snap.get("current_output")
+        self.errors = {}
+        self.parallel_results = copy.deepcopy(snap.get("parallel_results", {}))
+
 
 @dataclass
 class RunResult:

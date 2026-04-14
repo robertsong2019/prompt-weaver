@@ -1599,3 +1599,59 @@ def test_custom_transformer_with_context():
     w.add_output("o", "result")
     ctx = w.run()
     assert ctx.get("result") == "haha"
+
+
+# --- Context snapshot/restore tests ---
+
+def test_context_snapshot_basic():
+    ctx = Context()
+    ctx.set("x", 1)
+    ctx.set("y", "hello")
+    ctx.push_history("n1", "out1")
+    snap = ctx.snapshot()
+    # Mutate
+    ctx.set("x", 999)
+    ctx.push_history("n2", "out2")
+    # Restore
+    ctx.restore(snap)
+    assert ctx.get("x") == 1
+    assert ctx.get("y") == "hello"
+    assert len(ctx.history) == 1
+    assert ctx.current_output == "out1"
+
+def test_context_snapshot_isolation():
+    """Snapshot doesn't change when context mutates."""
+    ctx = Context()
+    ctx.set("items", [1, 2, 3])
+    snap = ctx.snapshot()
+    ctx.get("items").append(4)
+    assert ctx.get("items") == [1, 2, 3, 4]
+    # snap should be unaffected (deep copy)
+    assert snap["variables"]["items"] == [1, 2, 3]
+
+def test_context_restore_clears_errors():
+    ctx = Context()
+    ctx.set("a", 1)
+    snap = ctx.snapshot()
+    ctx.errors["n1"] = RuntimeError("boom")
+    ctx.restore(snap)
+    assert len(ctx.errors) == 0
+    assert ctx.get("a") == 1
+
+def test_context_snapshot_restore_in_workflow():
+    """Use snapshot/restore inside a custom hook for rollback."""
+    snapshots = {}
+
+    def hook(event, node_id, ctx):
+        if event == "before_node":
+            snapshots["saved"] = ctx.snapshot()
+        if event == "node_error" and "saved" in snapshots:
+            ctx.restore(snapshots["saved"])
+
+    w = PromptWeaver(on_error=None)
+    w.add_hook(hook)
+    w.add_prompt("start", "{{val}}", "t")
+    w.add_transform("t", ["upper"], "o")
+    w.add_output("o", "result")
+    ctx = w.run({"val": "hello"})
+    assert ctx.get("result") == "HELLO"
