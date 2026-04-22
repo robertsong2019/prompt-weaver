@@ -5,3 +5,4 @@ timestamp	commit	metric	value	status	description
 2026-04-14T21:00	67683a3	test_count	88/88	keep	+9 transformers (reverse/sort/head/tail/splitlines/unique/count/default) + 10 tests
 2026-04-14T21:05	08a626a	test_count	92/92	keep	Context.snapshot()/restore() checkpoint-rollback + 4 tests
 2026-04-14T21:10	1848acd	test_count	96/96	keep	weave_file() load-from-file + 4 tests, 2967→3194 lines
+2026-04-22T19:25	2ad810a	test_count	100/100	keep	pipeline_stats() — pipeline structure diagnostics (nodes, types, transformers, templates, hooks). 4 new tests (96→100).
