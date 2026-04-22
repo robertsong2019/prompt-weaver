@@ -786,6 +786,21 @@ class PromptWeaver:
         ctx.push_history(node.id, reduced)
         return node.next
 
+    def pipeline_stats(self) -> dict:
+        """Return pipeline structure statistics."""
+        node_types = {}
+        for n in self.nodes.values():
+            t = n.type.value if hasattr(n.type, 'value') else str(n.type)
+            node_types[t] = node_types.get(t, 0) + 1
+        return {
+            "nodes": len(self.nodes),
+            "node_types": node_types,
+            "transformers": len(self.transformers),
+            "templates": len(self.templates),
+            "hooks": len(self._hooks),
+            "has_start": self.start_node is not None,
+        }
+
     def run(self, variables: Optional[Dict[str, Any]] = None) -> Context:
         """执行工作流"""
         ctx = Context(variables=variables or {})

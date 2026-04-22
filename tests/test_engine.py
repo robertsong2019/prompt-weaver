@@ -1705,3 +1705,39 @@ def test_weave_file_with_transforms():
     w.add_output("o", "result")
     ctx = w.run()
     assert ctx.get("result") == "apple banana cherry"
+
+# ─── pipeline_stats() ──────────────────────────────
+class TestPipelineStats:
+    def test_empty_pipeline(self):
+        pw = PromptWeaver()
+        s = pw.pipeline_stats()
+        assert s["nodes"] == 0
+        assert s["transformers"] > 0  # default transformers
+        assert s["has_start"] is False
+
+    def test_after_adding_nodes(self):
+        pw = PromptWeaver()
+        pw.add_prompt("start", "Hello {{name}}")
+        pw.add_transform("upper", "start", lambda x: x.upper())
+        pw.add_output("end", "upper")
+        s = pw.pipeline_stats()
+        assert s["nodes"] == 3
+        assert s["node_types"]["prompt"] == 1
+        assert s["node_types"]["transform"] == 1
+        assert s["node_types"]["output"] == 1
+        assert s["has_start"] is True
+
+    def test_custom_transformer_and_template_count(self):
+        pw = PromptWeaver()
+        pw.register_transformer("custom", lambda x: x)
+        pw.register_template("greet", "Hi {{who}}")
+        pw.add_prompt("p", "{{greet}}")
+        s = pw.pipeline_stats()
+        assert s["transformers"] >= 2  # default + custom
+        assert s["templates"] == 1
+
+    def test_hooks_counted(self):
+        pw = PromptWeaver()
+        pw.add_hook(lambda e, n, c: None)
+        pw.add_hook(lambda e, n, c: None)
+        assert pw.pipeline_stats()["hooks"] == 2
