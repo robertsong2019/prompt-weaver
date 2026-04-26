@@ -1857,3 +1857,62 @@ def test_dry_run_single_node():
     w.add_prompt("only", "solo")
     path = w.dry_run()
     assert path == ["only"]
+
+
+# --- merge() tests ---
+
+def test_merge_basic():
+    w1 = PromptWeaver()
+    w1.add_prompt("a", "hello")
+    w1.add_output("b")
+    w1.nodes["a"].next = "b"
+
+    w2 = PromptWeaver()
+    w2.add_prompt("x", "world")
+    w2.add_output("y")
+    w2.nodes["x"].next = "y"
+
+    w1.merge(w2, prefix="p2_")
+    assert "p2_x" in w1.nodes
+    assert "p2_y" in w1.nodes
+    assert w1.nodes["p2_x"].next == "p2_y"
+
+
+def test_merge_preserves_original():
+    w1 = PromptWeaver()
+    w1.add_prompt("a", "hello")
+    w1.add_output("b")
+    w1.nodes["a"].next = "b"
+
+    w2 = PromptWeaver()
+    w2.add_prompt("a", "world")
+    w2.add_output("b")
+    w2.nodes["a"].next = "b"
+
+    w1.merge(w2, prefix="w2_")
+    # Both originals preserved with prefix
+    assert "a" in w1.nodes
+    assert "w2_a" in w1.nodes
+
+
+def test_merge_no_prefix_collision():
+    w1 = PromptWeaver()
+    w1.add_prompt("a", "first")
+
+    w2 = PromptWeaver()
+    w2.add_prompt("a", "second")
+
+    w1.merge(w2)  # no prefix — w2's 'a' overwrites w1's
+    assert w1.nodes["a"].config["template"] == "second"
+
+
+def test_merge_adopts_start_node():
+    w1 = PromptWeaver()
+    # no start node
+
+    w2 = PromptWeaver()
+    w2.add_prompt("start", "hello")
+    w2.start_node = "start"
+
+    w1.merge(w2, prefix="s_")
+    assert w1.start_node == "s_start"

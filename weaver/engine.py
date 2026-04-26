@@ -869,6 +869,35 @@ class PromptWeaver:
                 current = node.next
         return path
 
+    def merge(self, other: "PromptWeaver", prefix: str = "") -> "PromptWeaver":
+        """Merge another pipeline's nodes/templates/transformers into this one.
+        Optionally prefix node IDs to avoid collisions. Returns self."""
+        p = prefix
+        # Merge nodes
+        for nid, node in other.nodes.items():
+            new_id = f"{p}{nid}"
+            new_node = Node(
+                id=new_id,
+                type=node.type,
+                config=dict(node.config),
+                next=f"{p}{node.next}" if node.next and p else node.next,
+                branches={k: f"{p}{v}" if v and p else v for k, v in node.branches.items()},
+                max_retries=node.max_retries,
+                retry_delay=node.retry_delay,
+                on_error=node.on_error,
+            )
+            self.nodes[new_id] = new_node
+        # Merge templates
+        for name, tmpl in other.templates.items():
+            self.templates[f"{p}{name}"] = tmpl
+        # Merge transformers
+        for name, func in other.transformers.items():
+            self.transformers[f"{p}{name}"] = func
+        # If we have no start_node, adopt other's
+        if not self.start_node and other.start_node:
+            self.start_node = f"{p}{other.start_node}"
+        return self
+
     def pipeline_stats(self) -> dict:
         """Return pipeline structure statistics."""
         node_types = {}
