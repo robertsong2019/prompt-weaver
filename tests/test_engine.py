@@ -1741,3 +1741,64 @@ class TestPipelineStats:
         pw.add_hook(lambda e, n, c: None)
         pw.add_hook(lambda e, n, c: None)
         assert pw.pipeline_stats()["hooks"] == 2
+
+
+# --- validate() tests ---
+
+def test_validate_empty_pipeline():
+    w = PromptWeaver()
+    result = w.validate()
+    assert result["valid"] is False
+    assert any("No start node" in e for e in result["errors"])
+
+
+def test_validate_valid_pipeline():
+    w = PromptWeaver()
+    w.add_prompt("start", "hello {{name}}")
+    w.add_output("end")
+    w.nodes["start"].next = "end"
+    result = w.validate()
+    assert result["valid"] is True
+    assert result["errors"] == []
+    assert result["warnings"] == []
+
+
+def test_validate_missing_next_node():
+    w = PromptWeaver()
+    w.start_node = "a"
+    w.add_prompt("a", "test")
+    w.nodes["a"].next = "nonexistent"
+    result = w.validate()
+    assert result["valid"] is False
+    assert any("nonexistent" in e for e in result["errors"])
+
+
+def test_validate_missing_branch_target():
+    w = PromptWeaver()
+    w.start_node = "cond"
+    w.add_condition("cond", lambda ctx: True, "yes", "no")
+    w.add_prompt("yes", "positive")
+    # "no" node doesn't exist
+    result = w.validate()
+    assert result["valid"] is False
+    assert any("'no'" in e for e in result["errors"])
+
+
+def test_validate_unreachable_node():
+    w = PromptWeaver()
+    w.start_node = "a"
+    w.add_prompt("a", "start")
+    w.add_output("end")
+    w.nodes["a"].next = "end"
+    w.add_prompt("orphan", "lost")
+    result = w.validate()
+    assert result["valid"] is True
+    assert any("orphan" in w_msg for w_msg in result["warnings"])
+
+
+def test_validate_condition_missing_branches():
+    w = PromptWeaver()
+    w.start_node = "cond"
+    w.add_condition("cond", lambda ctx: True, None, None)
+    result = w.validate()
+    assert len(result["warnings"]) >= 2  # both branches missing

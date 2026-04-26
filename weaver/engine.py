@@ -786,6 +786,57 @@ class PromptWeaver:
         ctx.push_history(node.id, reduced)
         return node.next
 
+    def validate(self) -> Dict[str, Any]:
+        """Validate pipeline integrity. Returns {valid, errors, warnings}."""
+        errors = []
+        warnings = []
+
+        if not self.start_node:
+            errors.append("No start node defined")
+        elif self.start_node not in self.nodes:
+            errors.append(f"Start node '{self.start_node}' not found in nodes")
+
+        # Check all next/branch targets exist
+        for nid, node in self.nodes.items():
+            if node.next and node.next not in self.nodes:
+                errors.append(f"Node '{nid}' references missing next node '{node.next}'")
+            for branch, target in node.branches.items():
+                if target and target not in self.nodes:
+                    errors.append(f"Node '{nid}' branch '{branch}' references missing node '{target}'")
+
+        # Check for unreachable nodes
+        if self.start_node and self.start_node in self.nodes:
+            reachable = set()
+            stack = [self.start_node]
+            while stack:
+                cur = stack.pop()
+                if cur in reachable or cur not in self.nodes:
+                    continue
+                reachable.add(cur)
+                node = self.nodes[cur]
+                if node.next:
+                    stack.append(node.next)
+                for target in node.branches.values():
+                    if target:
+                        stack.append(target)
+            for nid in self.nodes:
+                if nid not in reachable:
+                    warnings.append(f"Node '{nid}' is unreachable")
+
+        # Check condition nodes have both branches
+        for nid, node in self.nodes.items():
+            if node.type == NodeType.CONDITION:
+                if not node.branches.get("true"):
+                    warnings.append(f"Condition node '{nid}' missing 'true' branch")
+                if not node.branches.get("false"):
+                    warnings.append(f"Condition node '{nid}' missing 'false' branch")
+
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings,
+        }
+
     def pipeline_stats(self) -> dict:
         """Return pipeline structure statistics."""
         node_types = {}
