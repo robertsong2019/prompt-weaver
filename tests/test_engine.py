@@ -8,7 +8,7 @@ from pathlib import Path
 # 添加父目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from weaver import PromptWeaver, Chain, weave, Context, NodeType, RunResult
+from weaver import PromptWeaver, Chain, weave, Context, NodeType, RunResult, weave_chain
 
 
 # ============================================================================
@@ -1916,3 +1916,21 @@ def test_merge_adopts_start_node():
 
     w1.merge(w2, prefix="s_")
     assert w1.start_node == "s_start"
+
+
+# --- weave_chain() tests ---
+
+def test_weave_chain_single():
+    result = weave_chain(["hello {{name}}"], {"name": "world"})
+    assert result == "hello world"
+
+
+def test_weave_chain_passthrough():
+    result = weave_chain(["{{a}}", "{{b}}"], {"a": "first", "b": "second"})
+    assert result == "second"
+
+
+def test_weave_chain_empty_raises():
+    import pytest
+    with pytest.raises(ValueError, match="At least one"):
+        weave_chain([])

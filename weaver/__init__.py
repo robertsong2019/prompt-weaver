@@ -8,6 +8,7 @@ from .engine import (
     NodeType,
     RunResult,
     weave,
+    weave_chain,
 )
 
 __version__ = "0.3.0"
@@ -19,4 +20,5 @@ __all__ = [
     "NodeType",
     "RunResult",
     "weave",
+    "weave_chain",
 ]

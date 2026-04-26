@@ -1195,6 +1195,23 @@ def weave(template: str, variables: Optional[Dict[str, Any]] = None) -> str:
     return ctx.current_output
 
 
+def weave_chain(templates: List[str], variables: Optional[Dict[str, Any]] = None) -> str:
+    """Quick pipeline: pass output of each template as input to next.
+    Last template's output is returned."""
+    if not templates:
+        raise ValueError("At least one template required")
+    w = PromptWeaver()
+    for i, tmpl in enumerate(templates):
+        nid = f"step_{i}"
+        w.add_prompt(nid, tmpl)
+        if i > 0:
+            w.nodes[f"step_{i-1}"].next = nid
+        if i == len(templates) - 1:
+            w.add_output("out")
+            w.nodes[nid].next = "out"
+    return w.run(variables).current_output
+
+
 def weave_file(path: str, variables: Optional[Dict[str, Any]] = None) -> str:
     """Load template from file and render with variables."""
     with open(path, "r", encoding="utf-8") as f:
