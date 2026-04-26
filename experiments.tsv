@@ -6,3 +6,7 @@ timestamp	commit	metric	value	status	description
 2026-04-14T21:05	08a626a	test_count	92/92	keep	Context.snapshot()/restore() checkpoint-rollback + 4 tests
 2026-04-14T21:10	1848acd	test_count	96/96	keep	weave_file() load-from-file + 4 tests, 2967→3194 lines
 2026-04-22T19:25	2ad810a	test_count	100/100	keep	pipeline_stats() — pipeline structure diagnostics (nodes, types, transformers, templates, hooks). 4 new tests (96→100).
+2026-04-26T21:00	cf5b3c4	test_count	106/106	keep	validate() — pipeline integrity check (errors + warnings + unreachable). 6 new tests.
+2026-04-26T21:05	8c39e7c	test_count	111/111	keep	dry_run() — trace execution path without templates. 5 new tests.
+2026-04-26T21:10	2922743	test_count	115/115	keep	merge(other, prefix) — compose two pipelines. 4 new tests.
+2026-04-26T21:15	bf47396	test_count	118/118	keep	weave_chain() — quick multi-template pipeline. 3 new tests.
