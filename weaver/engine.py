@@ -837,6 +837,38 @@ class PromptWeaver:
             "warnings": warnings,
         }
 
+    def dry_run(self, variables: Optional[Dict[str, Any]] = None) -> List[str]:
+        """Trace execution path without evaluating templates. Returns list of node IDs."""
+        if not self.start_node:
+            raise ValueError("No start node defined")
+        path = []
+        current = self.start_node
+        visited = set()
+        while current and current in self.nodes:
+            if current in visited:
+                path.append(f"{current} (CYCLE)")
+                break
+            visited.add(current)
+            path.append(current)
+            node = self.nodes[current]
+            if node.type == NodeType.CONDITION:
+                # Try to evaluate condition statically if it's a simple expr
+                cond_expr = node.config.get("condition_expr", "")
+                if cond_expr:
+                    try:
+                        cond = self._parse_condition(cond_expr)
+                        ctx = Context(variables=variables or {})
+                        result = cond(ctx)
+                        current = node.branches.get(str(result).lower(), node.branches.get("true"))
+                    except Exception:
+                        path.append("  (condition cannot be evaluated statically)")
+                        break
+                else:
+                    break
+            else:
+                current = node.next
+        return path
+
     def pipeline_stats(self) -> dict:
         """Return pipeline structure statistics."""
         node_types = {}

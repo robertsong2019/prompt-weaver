@@ -1802,3 +1802,58 @@ def test_validate_condition_missing_branches():
     w.add_condition("cond", lambda ctx: True, None, None)
     result = w.validate()
     assert len(result["warnings"]) >= 2  # both branches missing
+
+
+# --- dry_run() tests ---
+
+def test_dry_run_linear_pipeline():
+    w = PromptWeaver()
+    w.add_prompt("a", "hello")
+    w.add_transform("b", ["upper"])
+    w.add_output("c")
+    w.nodes["a"].next = "b"
+    w.nodes["b"].next = "c"
+    path = w.dry_run()
+    assert path == ["a", "b", "c"]
+
+
+def test_dry_run_with_condition_stops():
+    """dry_run stops at condition nodes (can't evaluate lambdas statically)."""
+    w = PromptWeaver()
+    w.add_prompt("start", "init")
+    w.add_condition("cond", lambda ctx: True, "yes", "no")
+    w.add_prompt("yes", "positive")
+    w.add_prompt("no", "negative")
+    w.nodes["start"].next = "cond"
+    path = w.dry_run()
+    assert path == ["start", "cond"]
+
+
+def test_dry_run_with_string_condition():
+    """dry_run evaluates string conditions when possible."""
+    w = PromptWeaver()
+    w.add_prompt("start", "init")
+    w.add_condition("cond", "variables.x > 0", "yes", "no")
+    w.add_prompt("yes", "positive")
+    w.add_prompt("no", "negative")
+    w.nodes["start"].next = "cond"
+    path = w.dry_run({"x": 5})
+    assert "start" in path
+    assert "cond" in path
+
+
+def test_dry_run_detects_cycle():
+    w = PromptWeaver()
+    w.add_prompt("a", "node a")
+    w.add_prompt("b", "node b")
+    w.nodes["a"].next = "b"
+    w.nodes["b"].next = "a"
+    path = w.dry_run()
+    assert any("CYCLE" in p for p in path)
+
+
+def test_dry_run_single_node():
+    w = PromptWeaver()
+    w.add_prompt("only", "solo")
+    path = w.dry_run()
+    assert path == ["only"]
