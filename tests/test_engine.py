@@ -1975,3 +1975,45 @@ def test_weave_parallel_independent():
     )
     assert results["a"] == "X"
     assert results["b"] == "Y"
+
+
+# --- weave_merge() tests ---
+
+def test_weave_merge_basic():
+    from weaver.engine import weave_merge
+    results = weave_merge(
+        ["{{a}}", "previous: {{_step_0}}"],
+        {"a": "hello"}
+    )
+    assert results["step_0"] == "hello"
+    assert results["step_1"] == "previous: hello"
+
+
+def test_weave_merge_single():
+    from weaver.engine import weave_merge
+    results = weave_merge(["{{x}}"], {"x": "42"})
+    assert results == {"step_0": "42"}
+
+
+def test_weave_merge_empty_raises():
+    import pytest
+    from weaver.engine import weave_merge
+    with pytest.raises(ValueError, match="At least one"):
+        weave_merge([])
+
+
+def test_weave_merge_accumulates():
+    from weaver.engine import weave_merge
+    results = weave_merge(
+        ["first={{n}}", "second={{_step_0}}", "third={{_step_1}}"],
+        {"n": "1"}
+    )
+    assert results["step_0"] == "first=1"
+    assert results["step_1"] == "second=first=1"
+    assert results["step_2"] == "third=second=first=1"
+
+
+def test_weave_merge_no_vars():
+    from weaver.engine import weave_merge
+    results = weave_merge(["hello", "world"])
+    assert results == {"step_0": "hello", "step_1": "world"}

@@ -1231,3 +1231,21 @@ def weave_parallel(
     for name, tmpl in templates.items():
         results[name] = weave(tmpl, variables)
     return results
+
+
+def weave_merge(
+    templates: List[str], variables: Optional[Dict[str, Any]] = None
+) -> Dict[str, str]:
+    """Chain templates sequentially, merging each output back into variables.
+    Each step's output is stored as variables['_step_N'] = output.
+    Returns all intermediate results as {step_0: output, step_1: output, ...}."""
+    if not templates:
+        raise ValueError("At least one template required")
+    var = dict(variables or {})
+    results = {}
+    for i, tmpl in enumerate(templates):
+        key = f"step_{i}"
+        output = weave(tmpl, var)
+        results[key] = output
+        var[f"_step_{i}"] = output
+    return results

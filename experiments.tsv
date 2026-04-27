@@ -10,3 +10,4 @@ timestamp	commit	metric	value	status	description
 2026-04-26T21:05	8c39e7c	test_count	111/111	keep	dry_run() — trace execution path without templates. 5 new tests.
 2026-04-26T21:10	2922743	test_count	115/115	keep	merge(other, prefix) — compose two pipelines. 4 new tests.
 2026-04-26T21:15	bf47396	test_count	118/118	keep	weave_chain() — quick multi-template pipeline. 3 new tests.
+2026-04-27T19:06:07+08:00	329179b	test_count	123/123	keep	weave_parallel(templates, vars) — render multiple named templates with shared variables. 5 new tests (118→123), ~12 lines src.
