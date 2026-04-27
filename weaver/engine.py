@@ -1217,3 +1217,17 @@ def weave_file(path: str, variables: Optional[Dict[str, Any]] = None) -> str:
     with open(path, "r", encoding="utf-8") as f:
         template = f.read()
     return weave(template, variables)
+
+
+def weave_parallel(
+    templates: Dict[str, str], variables: Optional[Dict[str, Any]] = None
+) -> Dict[str, str]:
+    """Render multiple named templates with shared variables.
+    Returns {name: rendered_output} for each template.
+    Each template is rendered independently — no output chaining."""
+    if not templates:
+        raise ValueError("At least one template required")
+    results = {}
+    for name, tmpl in templates.items():
+        results[name] = weave(tmpl, variables)
+    return results

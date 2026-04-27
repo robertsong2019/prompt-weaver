@@ -1934,3 +1934,44 @@ def test_weave_chain_empty_raises():
     import pytest
     with pytest.raises(ValueError, match="At least one"):
         weave_chain([])
+
+
+# --- weave_parallel() tests ---
+
+def test_weave_parallel_basic():
+    from weaver.engine import weave_parallel
+    results = weave_parallel(
+        {"greeting": "Hello {{name}}", "farewell": "Bye {{name}}"},
+        {"name": "World"}
+    )
+    assert results == {"greeting": "Hello World", "farewell": "Bye World"}
+
+
+def test_weave_parallel_single():
+    from weaver.engine import weave_parallel
+    results = weave_parallel({"only": "{{x}}"}, {"x": "42"})
+    assert results == {"only": "42"}
+
+
+def test_weave_parallel_no_vars():
+    from weaver.engine import weave_parallel
+    results = weave_parallel({"a": "hello", "b": "world"})
+    assert results == {"a": "hello", "b": "world"}
+
+
+def test_weave_parallel_empty_raises():
+    import pytest
+    from weaver.engine import weave_parallel
+    with pytest.raises(ValueError, match="At least one"):
+        weave_parallel({})
+
+
+def test_weave_parallel_independent():
+    """Each template renders independently — no cross-contamination."""
+    from weaver.engine import weave_parallel
+    results = weave_parallel(
+        {"a": "{{x}}", "b": "{{y}}"},
+        {"x": "X", "y": "Y"}
+    )
+    assert results["a"] == "X"
+    assert results["b"] == "Y"
