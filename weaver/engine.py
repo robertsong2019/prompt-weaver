@@ -86,6 +86,15 @@ class Context:
         self.errors = {}
         self.parallel_results = copy.deepcopy(snap.get("parallel_results", {}))
 
+    def undo(self, steps: int = 1) -> None:
+        """Rollback last N history entries. Restores current_output to the
+        entry before the rollback point (or None if all history is undone)."""
+        if steps < 1:
+            raise ValueError("steps must be >= 1")
+        for _ in range(min(steps, len(self.history))):
+            self.history.pop()
+        self.current_output = self.history[-1]["output"] if self.history else None
+
 
 @dataclass
 class RunResult:

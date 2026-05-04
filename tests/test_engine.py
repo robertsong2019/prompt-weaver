@@ -2104,3 +2104,42 @@ class TestPipelineDiff:
         diff = pw1.pipeline_diff(pw2)
         assert "my_lower" in diff["added_transformers"]
         assert "my_upper" in diff["removed_transformers"]
+
+
+class TestContextUndo:
+    def test_undo_single_step(self):
+        ctx = Context()
+        ctx.push_history("a", "hello")
+        ctx.push_history("b", "world")
+        ctx.undo(1)
+        assert len(ctx.history) == 1
+        assert ctx.current_output == "hello"
+
+    def test_undo_multiple_steps(self):
+        ctx = Context()
+        ctx.push_history("a", 1)
+        ctx.push_history("b", 2)
+        ctx.push_history("c", 3)
+        ctx.undo(2)
+        assert len(ctx.history) == 1
+        assert ctx.current_output == 1
+
+    def test_undo_all(self):
+        ctx = Context()
+        ctx.push_history("a", "x")
+        ctx.undo(1)
+        assert ctx.history == []
+        assert ctx.current_output is None
+
+    def test_undo_more_than_history(self):
+        ctx = Context()
+        ctx.push_history("a", 1)
+        ctx.undo(5)  # clamps to len(history)
+        assert ctx.history == []
+        assert ctx.current_output is None
+
+    def test_undo_invalid_steps(self):
+        import pytest
+        ctx = Context()
+        with pytest.raises(ValueError):
+            ctx.undo(0)
