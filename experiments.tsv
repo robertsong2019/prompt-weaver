@@ -12,3 +12,4 @@ timestamp	commit	metric	value	status	description
 2026-04-26T21:15	bf47396	test_count	118/118	keep	weave_chain() — quick multi-template pipeline. 3 new tests.
 2026-04-27T19:06:07+08:00	329179b	test_count	123/123	keep	weave_parallel(templates, vars) — render multiple named templates with shared variables. 5 new tests (118→123), ~12 lines src.
 2026-04-27T19:07:48+08:00	d6af205	test_count	128/128	keep	weave_merge(templates, vars) — chain templates with output accumulation (_step_N). 5 new tests (123→128), ~15 lines src.
+2026-05-04T21:06:37+08:00	3893078	test_count	133/133	keep	cycle1: weave_filter(templates, condition, vars) — render & filter. +5 tests

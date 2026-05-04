@@ -913,6 +913,29 @@ class PromptWeaver:
             "has_start": self.start_node is not None,
         }
 
+    def pipeline_diff(self, other: "PromptWeaver") -> Dict[str, Any]:
+        """Compare this pipeline with another, returning structural differences.
+        Returns dict with: added_nodes, removed_nodes, changed_nodes,
+        added_templates, removed_templates, added_transformers, removed_transformers."""
+        self_nodes = set(self.nodes.keys())
+        other_nodes = set(other.nodes.keys())
+        common = self_nodes & other_nodes
+        changed = []
+        for nid in sorted(common):
+            sn, on = self.nodes[nid], other.nodes[nid]
+            if (sn.type != on.type or sn.config != on.config
+                    or sn.next != on.next or sn.branches != on.branches):
+                changed.append(nid)
+        return {
+            "added_nodes": sorted(other_nodes - self_nodes),
+            "removed_nodes": sorted(self_nodes - other_nodes),
+            "changed_nodes": changed,
+            "added_templates": sorted(set(other.templates.keys()) - set(self.templates.keys())),
+            "removed_templates": sorted(set(self.templates.keys()) - set(other.templates.keys())),
+            "added_transformers": sorted(set(other.transformers.keys()) - set(self.transformers.keys())),
+            "removed_transformers": sorted(set(self.transformers.keys()) - set(other.transformers.keys())),
+        }
+
     def run(self, variables: Optional[Dict[str, Any]] = None) -> Context:
         """执行工作流"""
         ctx = Context(variables=variables or {})

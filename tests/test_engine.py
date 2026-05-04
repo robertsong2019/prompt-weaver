@@ -2055,3 +2055,52 @@ class TestWeaveFilter:
         import pytest
         with pytest.raises(TypeError):
             weave_filter({"a": "hi"}, "not callable")  # type: ignore
+
+
+class TestPipelineDiff:
+    def test_identical_pipelines(self):
+        pw = PromptWeaver()
+        pw.add_prompt("a", "hello").add_output("out")
+        pw2 = PromptWeaver()
+        pw2.add_prompt("a", "hello").add_output("out")
+        diff = pw.pipeline_diff(pw2)
+        assert diff["added_nodes"] == []
+        assert diff["removed_nodes"] == []
+        assert diff["changed_nodes"] == []
+
+    def test_added_removed_nodes(self):
+        pw1 = PromptWeaver()
+        pw1.add_prompt("a", "hello").add_output("out")
+        pw2 = PromptWeaver()
+        pw2.add_prompt("b", "world").add_output("out")
+        diff = pw1.pipeline_diff(pw2)
+        assert "b" in diff["added_nodes"]
+        assert "a" in diff["removed_nodes"]
+
+    def test_changed_node(self):
+        pw1 = PromptWeaver()
+        pw1.add_prompt("a", "hello").add_output("out")
+        pw2 = PromptWeaver()
+        pw2.add_prompt("a", "world").add_output("out")
+        diff = pw1.pipeline_diff(pw2)
+        assert "a" in diff["changed_nodes"]
+
+    def test_template_diff(self):
+        pw1 = PromptWeaver()
+        pw1.templates["t1"] = "hello"
+        pw2 = PromptWeaver()
+        pw2.templates["t2"] = "world"
+        diff = pw1.pipeline_diff(pw2)
+        assert "t2" in diff["added_templates"]
+        assert "t1" in diff["removed_templates"]
+
+    def test_transformer_diff(self):
+        pw1 = PromptWeaver()
+        pw1.transformers.clear()
+        pw1.register_transformer("my_upper", lambda x: x.upper())
+        pw2 = PromptWeaver()
+        pw2.transformers.clear()
+        pw2.register_transformer("my_lower", lambda x: x.lower())
+        diff = pw1.pipeline_diff(pw2)
+        assert "my_lower" in diff["added_transformers"]
+        assert "my_upper" in diff["removed_transformers"]
