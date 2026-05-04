@@ -1283,6 +1283,26 @@ def weave_filter(
     return results
 
 
+def weave_reduce(
+    templates: List[str],
+    reducer: Callable[[Any, str], Any],
+    variables: Optional[Dict[str, Any]] = None,
+    initial: Any = None,
+) -> Any:
+    """Render templates sequentially, reducing outputs with an accumulator.
+    reducer(accumulator, rendered_output) is called for each template.
+    Returns final accumulator value."""
+    if not templates:
+        raise ValueError("At least one template required")
+    if not callable(reducer):
+        raise TypeError("reducer must be callable")
+    acc = initial
+    for tmpl in templates:
+        rendered = weave(tmpl, variables)
+        acc = reducer(acc, rendered)
+    return acc
+
+
 def weave_merge(
     templates: List[str], variables: Optional[Dict[str, Any]] = None
 ) -> Dict[str, str]:

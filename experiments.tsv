@@ -14,3 +14,4 @@ timestamp	commit	metric	value	status	description
 2026-04-27T19:07:48+08:00	d6af205	test_count	128/128	keep	weave_merge(templates, vars) — chain templates with output accumulation (_step_N). 5 new tests (123→128), ~15 lines src.
 2026-05-04T21:06:37+08:00	3893078	test_count	133/133	keep	cycle1: weave_filter(templates, condition, vars) — render & filter. +5 tests
 2026-05-04T21:13:51+08:00	3a8f44d	test_count	138/138	keep	cycle2: pipeline_diff(other) — structural comparison. +5 tests
+2026-05-04T21:15:33+08:00	a23e4a9	test_count	143/143	keep	cycle3: Context.undo(steps) — rollback history. +5 tests

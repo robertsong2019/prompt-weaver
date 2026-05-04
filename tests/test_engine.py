@@ -2143,3 +2143,43 @@ class TestContextUndo:
         ctx = Context()
         with pytest.raises(ValueError):
             ctx.undo(0)
+
+
+class TestWeaveReduce:
+    def test_concat(self):
+        from weaver.engine import weave_reduce
+        result = weave_reduce(
+            ["hello", " ", "world"],
+            lambda acc, s: (acc or "") + s,
+        )
+        assert result == "hello world"
+
+    def test_sum_lengths(self):
+        from weaver.engine import weave_reduce
+        result = weave_reduce(
+            ["hi", "world"],
+            lambda acc, s: (acc or 0) + len(s),
+        )
+        assert result == 7
+
+    def test_with_variables(self):
+        from weaver.engine import weave_reduce
+        result = weave_reduce(
+            ["{{ x }}", "{{ y }}"],
+            lambda acc, s: (acc or []) + [s],
+            variables={"x": "10", "y": "20"},
+            initial=[],
+        )
+        assert result == ["10", "20"]
+
+    def test_empty_raises(self):
+        from weaver.engine import weave_reduce
+        import pytest
+        with pytest.raises(ValueError):
+            weave_reduce([], lambda a, s: a)
+
+    def test_not_callable_raises(self):
+        from weaver.engine import weave_reduce
+        import pytest
+        with pytest.raises(TypeError):
+            weave_reduce(["hi"], "not callable")  # type: ignore
