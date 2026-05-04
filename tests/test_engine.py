@@ -2017,3 +2017,41 @@ def test_weave_merge_no_vars():
     from weaver.engine import weave_merge
     results = weave_merge(["hello", "world"])
     assert results == {"step_0": "hello", "step_1": "world"}
+
+
+class TestWeaveFilter:
+    def test_filter_basic(self):
+        from weaver.engine import weave_filter
+        templates = {
+            "short": "hi",
+            "long": "hello {{ name }} from {{ city }}",
+            "medium": "hey there",
+        }
+        results = weave_filter(templates, lambda n, r: len(r) > 5, {"name": "A", "city": "B"})
+        assert "short" not in results
+        assert "long" in results
+        assert "medium" in results
+
+    def test_filter_by_name(self):
+        from weaver.engine import weave_filter
+        templates = {"a": "x", "b": "y", "c": "z"}
+        results = weave_filter(templates, lambda n, r: n != "b")
+        assert set(results.keys()) == {"a", "c"}
+
+    def test_filter_empty_raises(self):
+        from weaver.engine import weave_filter
+        import pytest
+        with pytest.raises(ValueError):
+            weave_filter({}, lambda n, r: True)
+
+    def test_filter_no_match(self):
+        from weaver.engine import weave_filter
+        templates = {"a": "hello"}
+        results = weave_filter(templates, lambda n, r: False)
+        assert results == {}
+
+    def test_filter_condition_not_callable(self):
+        from weaver.engine import weave_filter
+        import pytest
+        with pytest.raises(TypeError):
+            weave_filter({"a": "hi"}, "not callable")  # type: ignore

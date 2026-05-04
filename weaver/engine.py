@@ -1233,6 +1233,24 @@ def weave_parallel(
     return results
 
 
+def weave_filter(
+    templates: Dict[str, str],
+    condition: Callable[[str, str], bool],
+    variables: Optional[Dict[str, Any]] = None,
+) -> Dict[str, str]:
+    """Render named templates, return only those where condition(name, rendered) is True."""
+    if not templates:
+        raise ValueError("At least one template required")
+    if not callable(condition):
+        raise TypeError("condition must be callable")
+    results = {}
+    for name, tmpl in templates.items():
+        rendered = weave(tmpl, variables)
+        if condition(name, rendered):
+            results[name] = rendered
+    return results
+
+
 def weave_merge(
     templates: List[str], variables: Optional[Dict[str, Any]] = None
 ) -> Dict[str, str]:
